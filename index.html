@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Bay Bros Wiffle — Player Stats</title>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css"/>
+<style>
+body { font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:20px; }
+h1 { margin-bottom:12px; }
+#tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.tab-btn { padding:8px 12px; border-radius:6px; border:1px solid #ccc; cursor:pointer; background:#fff; }
+.tab-btn.active { background:#004466; color:#fff; border-color:#00334a; }
+table.dataTable thead { background:#004466; color:#fff; }
+#no-data { color:#b00; margin-top:8px; display:none; }
+</style>
+</head>
+<body>
+
+<h1>Bay Bros Wiffle — Player Stats</h1>
+<div id="tabs"></div>
+<table id="stats-table" class="display" style="width:100%; display:none;">
+  <thead></thead>
+  <tbody></tbody>
+</table>
+<div id="no-data">Loading...</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+<script>
+(function(){
+//////////////////////
+// CONFIG — EDIT THESE
+//////////////////////
+const SPREADSHEET_ID = "2PACX-1vS9PBgLUF3MZqsXOQnbV_nptNSKLfST-rRMwf8J7Py0LSc9G5NY_zjkN8WPHkA1HRR-6A8rn4MRudNF";
+const SHEETS_INFO = [
+  { name: "Season 7 Batting Stats", gid: "1205657621" },
+  { name: "Season 7 Pitching Stats", gid: "1096602333" },
+  { name: "Season 6 Batting Stats", gid: "1316608386" },
+  { name: "Season 6 Pitching Stats", gid: "244783453" },
+  { name: "Career Batting Stats", gid: "782230934" },
+  { name: "Career Pitching Stats", gid: "509746022" }
+];
+//////////////////////
+
+const TPL_CSV_URL = gid => `https://docs.google.com/spreadsheets/d/e/${SPREADSHEET_ID}/pub?gid=${gid}&single=true&output=csv`;
+
+const tabsWrap = document.getElementById('tabs');
+const tableEl = $('#stats-table');
+const headerEl = tableEl.find('thead');
+const bodyEl = tableEl.find('tbody');
+const noDataEl = document.getElementById('no-data');
+let dataTable = null;
+
+function buildTable(rows){
+  headerEl.empty();
+  bodyEl.empty();
+  if(!rows || rows.length===0){
+    tableEl.hide();
+    noDataEl.style.display='block';
+    noDataEl.textContent='No data found.';
+    return;
+  }
+
+  // Build header
+  const header = rows[0];
+  const trHeader = $('<tr>');
+  header.forEach(col => trHeader.append(`<th>${col}</th>`));
+  headerEl.append(trHeader);
+
+  // Find "Team" column index
+  const teamColIndex = header.findIndex(h => h.trim().toLowerCase() === "team");
+
+  // Build body, excluding "Legend" rows and everything after
+  const bodyRows = [];
+  for(let i=1;i<rows.length;i++){
+    const row = rows[i];
+    if(teamColIndex>=0 && row[teamColIndex] && row[teamColIndex].trim().toLowerCase()==='legend'){
+      break; // stop including rows
+    }
+    bodyRows.push(row);
+  }
+
+  bodyRows.forEach(row=>{
+    const tr = $('<tr>');
+    row.forEach(cell=>{
+      tr.append(`<td>${cell}</td>`);
+    });
+    bodyEl.append(tr);
+  });
+
+  // Init DataTable
+  if(dataTable) try{ dataTable.destroy(); }catch(e){}
+  tableEl.show();
+  dataTable = tableEl.DataTable({
+    paging:true,
+    searching:true,
+    info:true,
+    order:[[1,'desc']],
+    lengthMenu:[10,25,50,100],
+    autoWidth:false,
+    responsive:true
+  });
+}
+
+function loadSheet(gid){
+  noDataEl.style.display='block';
+  noDataEl.textContent='Loading...';
+  tableEl.hide();
+  Papa.parse(TPL_CSV_URL(gid), {
+    download:true,
+    skipEmptyLines:true,
+    complete:function(results){
+      buildTable(results.data);
+      noDataEl.style.display='none';
+    },
+    error:function(err){
+      noDataEl.style.display='block';
+      noDataEl.textContent='Error fetching CSV: '+err.message;
+    }
+  });
+}
+
+function renderTabs(){
+  tabsWrap.innerHTML='';
+  SHEETS_INFO.forEach((sheet,i)=>{
+    const btn = document.createElement('button');
+    btn.className='tab-btn';
+    btn.textContent=sheet.name;
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      loadSheet(sheet.gid);
+    });
+    tabsWrap.appendChild(btn);
+    if(i===0){
+      btn.classList.add('active');
+      loadSheet(sheet.gid);
+    }
+  });
+}
+
+renderTabs();
+})();
+</script>
+
+</body>
+</html>
