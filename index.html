@@ -37,6 +37,17 @@ table.dataTable thead th {
     overflow-y: auto;
     overflow-x: auto;
 }
+/* Hover highlight */
+table.dataTable tbody tr:hover {
+  background-color: #333 !important;
+  cursor: pointer;
+}
+
+/* Click-to-lock highlight */
+table.dataTable tbody tr.selected {
+  background-color: #555 !important;
+}
+
 </style>
 </head>
 <body>
@@ -119,6 +130,11 @@ function buildTable(rows){
     scrollCollapse: true,
     autoWidth:false
   });
+    // Enable row click-to-select toggle
+$('#stats-table tbody').off('click').on('click', 'tr', function () {
+  $(this).toggleClass('selected');
+});
+
 }
 
 function loadSheet(url){
