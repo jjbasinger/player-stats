@@ -74,44 +74,42 @@ const noDataEl = document.getElementById('no-data');
 let dataTable = null;
 
 function buildTable(rows){
-  headerEl.empty();
-  bodyEl.empty();
   if(!rows || rows.length===0){
     tableEl.hide();
     noDataEl.style.display='block';
     noDataEl.textContent='No data found.';
     return;
   }
-
-  // Build header
-  const header = rows[0];
-  const trHeader = $('<tr>');
-  header.forEach(col => trHeader.append(`<th>${col}</th>`));
-  headerEl.append(trHeader);
-
-  // Build body
-  const bodyRows = rows.slice(1);
-  bodyRows.forEach(row=>{
-    const tr = $('<tr>');
-    row.forEach(cell=>{
-      tr.append(`<td>${cell}</td>`);
-    });
-    bodyEl.append(tr);
-  });
-
-  // Init DataTable with scroll and no paging
-  if(dataTable) try{ dataTable.destroy(); }catch(e){}
+  noDataEl.style.display='none';
   tableEl.show();
-  dataTable = tableEl.DataTable({
-    paging:false,
-    searching:true,
-    info:false,
-    order:[[1,'desc']],
-    scrollY: '600px',
-    scrollCollapse: true,
-    autoWidth:false,
-    responsive:true
-  });
+
+  const header = rows[0];
+  const bodyRows = rows.slice(1);
+
+  // Initialize DataTable only once
+  if(!$.fn.DataTable.isDataTable('#stats-table')){
+    // Build header
+    headerEl.empty();
+    const trHeader = $('<tr>');
+    header.forEach(col => trHeader.append(`<th>${col}</th>`));
+    headerEl.append(trHeader);
+
+    dataTable = tableEl.DataTable({
+      paging:false,
+      searching:true,
+      info:false,
+      order:[[1,'desc']],
+      scrollY: '600px',
+      scrollCollapse: true,
+      autoWidth:false,
+      responsive:true
+    });
+  }
+
+  // Clear old data and add new rows smoothly
+  dataTable.clear();
+  dataTable.rows.add(bodyRows);
+  dataTable.draw();
 }
 
 function loadSheet(url){
