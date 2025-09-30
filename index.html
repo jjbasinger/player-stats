@@ -8,23 +8,46 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css"/>
 
 <style>
-body { font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:20px; }
-h1 { margin-bottom:12px; }
+body { font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:20px; background:#111; color:#fff; }
+h1 { margin-bottom:12px; color:#fff; }
 #tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-.tab-btn { padding:8px 12px; border-radius:6px; border:1px solid #ccc; cursor:pointer; background:#fff; }
+.tab-btn { padding:8px 12px; border-radius:6px; border:1px solid #555; cursor:pointer; background:#222; color:#fff; }
 .tab-btn.active { background:#004466; color:#fff; border-color:#00334a; }
-table.dataTable thead { background:#004466; color:#fff; }
-#no-data { color:#b00; margin-top:8px; display:none; }
+
+/* Dark table */
+table.dataTable { color:#fff !important; background:none !important; }
+table.dataTable thead { background:#222; color:#fff; }
+table.dataTable tbody tr { background:none; color:#fff; }
+table.dataTable tbody tr:nth-child(even) { background:#111; }
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_paginate,
+.dataTables_wrapper .dataTables_info { color:#fff; }
+#no-data { color:#f00; margin-top:8px; display:none; }
+
+/* Sticky header */
+.dataTables_scrollHeadInner thead th,
+table.dataTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background:#222 !important;
+}
+.dataTables_scrollBody {
+    max-height: 600px; /* adjust as needed */
+    overflow-y: auto;
+}
 </style>
 </head>
 <body>
 
 <h1>Bay Bros Wiffle — Player Stats</h1>
 <div id="tabs"></div>
-<table id="stats-table" class="display" style="width:100%; display:none;">
-  <thead></thead>
-  <tbody></tbody>
-</table>
+<div style="overflow:auto;">
+  <table id="stats-table" class="display" style="width:100%; display:none;">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
 <div id="no-data">Loading...</div>
 
 <!-- JS libraries -->
@@ -38,8 +61,8 @@ table.dataTable thead { background:#004466; color:#fff; }
 // CONFIG — EDIT THESE
 //////////////////////
 const SHEETS_INFO = [
-  { name: "Career Batting Stats", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9PBgLUF3MZqsXOQnbV_nptNSKLfST-rRMwf8J7Py0LSc9G5NY_zjkN8WPHkA1HRR-6A8rn4MRudNF/pub?gid=782230934&single=true&output=csv" },
-  { name: "Career Pitching Stats", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9PBgLUF3MZqsXOQnbV_nptNSKLfST-rRMwf8J7Py0LSc9G5NY_zjkN8WPHkA1HRR-6A8rn4MRudNF/pub?gid=509746022&single=true&output=csv" }
+  { name: "Batting Stats", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9PBgLUF3MZqsXOQnbV_nptNSKLfST-rRMwf8J7Py0LSc9G5NY_zjkN8WPHkA1HRR-6A8rn4MRudNF/pub?gid=782230934&single=true&output=csv" },
+  { name: "Pitching Stats", url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9PBgLUF3MZqsXOQnbV_nptNSKLfST-rRMwf8J7Py0LSc9G5NY_zjkN8WPHkA1HRR-6A8rn4MRudNF/pub?gid=509746022&single=true&output=csv" }
 ];
 //////////////////////
 
@@ -76,15 +99,16 @@ function buildTable(rows){
     bodyEl.append(tr);
   });
 
-  // Init DataTable
+  // Init DataTable with scroll and no paging
   if(dataTable) try{ dataTable.destroy(); }catch(e){}
   tableEl.show();
   dataTable = tableEl.DataTable({
-    paging:true,
+    paging:false,
     searching:true,
-    info:true,
+    info:false,
     order:[[1,'desc']],
-    lengthMenu:[10,25,50,100],
+    scrollY: '600px',
+    scrollCollapse: true,
     autoWidth:false,
     responsive:true
   });
@@ -121,7 +145,6 @@ function renderTabs(){
     });
     tabsWrap.appendChild(btn);
 
-    // Load first sheet by default
     if(i===0){
       btn.classList.add('active');
       loadSheet(sheet.url);
