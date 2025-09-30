@@ -35,12 +35,13 @@ table.dataTable thead th {
 .dataTables_scrollBody {
     max-height: 600px; /* adjust as needed */
     overflow-y: auto;
+    overflow-x: auto;
 }
 </style>
 </head>
 <body>
 
-<h1>Bay Bros Wiffle — Player Stats</h1>
+<h1>Career Stats</h1>
 <div id="tabs"></div>
 <div style="overflow:auto;">
   <table id="stats-table" class="display" style="width:100%; display:none;">
@@ -100,6 +101,7 @@ function buildTable(rows){
       info:false,
       order:[[1,'desc']],
       scrollY: '600px',
+    scrollX: true,
       scrollCollapse: true,
       autoWidth:false,
       responsive:true
