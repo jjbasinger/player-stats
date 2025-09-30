@@ -37,15 +37,18 @@ table.dataTable thead th {
     overflow-y: auto;
     overflow-x: auto;
 }
-/* Hover highlight */
-table.dataTable tbody tr:hover {
+
+/* Hover highlight (light gray) */
+#stats-table.dataTable tbody tr:hover {
   background-color: #ddd !important;
+  color: #000 !important;  /* force text black so it's readable */
   cursor: pointer;
 }
 
-/* Click-to-lock highlight */
-table.dataTable tbody tr.selected {
+/* Click-to-lock highlight (darker gray) */
+#stats-table.dataTable tbody tr.selected {
   background-color: #bbb !important;
+  color: #000 !important;
 }
 
 </style>
@@ -130,7 +133,8 @@ function buildTable(rows){
     scrollCollapse: true,
     autoWidth:false
   });
-    // Enable row click-to-select toggle
+    
+// Hover is pure CSS, but click-to-lock requires this:
 $('#stats-table tbody').off('click').on('click', 'tr', function () {
   $(this).toggleClass('selected');
 });
