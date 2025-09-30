@@ -86,14 +86,14 @@ function buildTable(rows){
   const header = rows[0];
   const bodyRows = rows.slice(1);
 
-  // Initialize DataTable only once
   if(!$.fn.DataTable.isDataTable('#stats-table')){
-    // Build header
+    // Build header once
     headerEl.empty();
     const trHeader = $('<tr>');
     header.forEach(col => trHeader.append(`<th>${col}</th>`));
     headerEl.append(trHeader);
 
+    // Init DataTable
     dataTable = tableEl.DataTable({
       paging:false,
       searching:true,
@@ -104,12 +104,36 @@ function buildTable(rows){
       autoWidth:false,
       responsive:true
     });
-  }
 
-  // Clear old data and add new rows smoothly
-  dataTable.clear();
-  dataTable.rows.add(bodyRows);
-  dataTable.draw();
+    // Load initial rows
+    dataTable.clear();
+    dataTable.rows.add(bodyRows);
+    dataTable.draw();
+  } else {
+    // If columns differ between sheets → rebuild header
+    const currentCols = dataTable.columns().header().toArray().map(h=>$(h).text());
+    if (JSON.stringify(currentCols) !== JSON.stringify(header)) {
+      dataTable.destroy();
+      headerEl.empty();
+      const trHeader = $('<tr>');
+      header.forEach(col => trHeader.append(`<th>${col}</th>`));
+      headerEl.append(trHeader);
+      dataTable = tableEl.DataTable({
+        paging:false,
+        searching:true,
+        info:false,
+        order:[[1,'desc']],
+        scrollY: '600px',
+        scrollCollapse: true,
+        autoWidth:false,
+        responsive:true
+      });
+    }
+    // Replace rows
+    dataTable.clear();
+    dataTable.rows.add(bodyRows);
+    dataTable.draw();
+  }
 }
 
 function loadSheet(url){
