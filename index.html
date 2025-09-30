@@ -75,67 +75,48 @@ const noDataEl = document.getElementById('no-data');
 let dataTable = null;
 
 function buildTable(rows){
-  if(!rows || rows.length===0){
+  if(!rows || rows.length === 0){
     tableEl.hide();
-    noDataEl.style.display='block';
-    noDataEl.textContent='No data found.';
+    noDataEl.style.display = 'block';
+    noDataEl.textContent = 'No data found.';
     return;
   }
-  noDataEl.style.display='none';
+  noDataEl.style.display = 'none';
   tableEl.show();
 
   const header = rows[0];
   const bodyRows = rows.slice(1);
 
-  if(!$.fn.DataTable.isDataTable('#stats-table')){
-    // Build header once
-    headerEl.empty();
-    const trHeader = $('<tr>');
-    header.forEach(col => trHeader.append(`<th>${col}</th>`));
-    headerEl.append(trHeader);
-
-    // Init DataTable
-    dataTable = tableEl.DataTable({
-      paging:false,
-      searching:true,
-      info:false,
-      order:[[1,'desc']],
-      scrollY: '600px',
-    scrollX: true,
-      scrollCollapse: true,
-      autoWidth:false,
-      responsive:true
-    });
-
-    // Load initial rows
-    dataTable.clear();
-    dataTable.rows.add(bodyRows);
-    dataTable.draw();
-  } else {
-    // If columns differ between sheets → rebuild header
-    const currentCols = dataTable.columns().header().toArray().map(h=>$(h).text());
-    if (JSON.stringify(currentCols) !== JSON.stringify(header)) {
-      dataTable.destroy();
-      headerEl.empty();
-      const trHeader = $('<tr>');
-      header.forEach(col => trHeader.append(`<th>${col}</th>`));
-      headerEl.append(trHeader);
-      dataTable = tableEl.DataTable({
-        paging:false,
-        searching:true,
-        info:false,
-        order:[[1,'desc']],
-        scrollY: '600px',
-        scrollCollapse: true,
-        autoWidth:false,
-        responsive:true
-      });
-    }
-    // Replace rows
-    dataTable.clear();
-    dataTable.rows.add(bodyRows);
-    dataTable.draw();
+  // Destroy old DataTable if it exists
+  if ( $.fn.DataTable.isDataTable('#stats-table') ) {
+      tableEl.DataTable().clear().destroy();
   }
+
+  // Build new header
+  headerEl.empty();
+  const trHeader = $('<tr>');
+  header.forEach(col => trHeader.append(`<th>${col}</th>`));
+  headerEl.append(trHeader);
+
+  // Build new body
+  bodyEl.empty();
+  bodyRows.forEach(row => {
+    const tr = $('<tr>');
+    row.forEach(cell => tr.append(`<td>${cell}</td>`));
+    bodyEl.append(tr);
+  });
+
+  // Initialize DataTable fresh with new structure
+  dataTable = tableEl.DataTable({
+    paging:false,
+    searching:true,
+    info:false,
+    order:[[0,'asc']],   // default sort first column; you can change per sheet if needed
+    scrollY: '600px',
+    scrollX: true,       // ✅ allow horizontal scrolling
+    scrollCollapse: true,
+    autoWidth:false
+  });
 }
 
 function loadSheet(url){
